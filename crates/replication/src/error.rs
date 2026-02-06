@@ -1,0 +1,2 @@
+//! Replication-specific error types.
+
