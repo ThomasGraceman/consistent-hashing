@@ -11,12 +11,12 @@ use std::sync::Arc;
 /// Combines a token with its partitioner to provide a complete
 /// position abstraction.
 #[derive(Clone)]
-pub struct Position<T: Token, P: Partitioner<TokenType = T>> {
+pub struct Position<T: Token, P: Partitioner<TokenType = T> + Clone> {
     token: T,
     partitioner: Arc<P>,
 }
 
-impl<T: Token, P: Partitioner<TokenType = T>> Position<T, P> {
+impl<T: Token, P: Partitioner<TokenType = T> + Clone> Position<T, P> {
     /// Creates a new position with the given token and partitioner.
     pub fn new(token: T, partitioner: Arc<P>) -> Self {
         Self { token, partitioner }
@@ -33,27 +33,27 @@ impl<T: Token, P: Partitioner<TokenType = T>> Position<T, P> {
     }
 }
 
-impl<T: Token, P: Partitioner<TokenType = T>> PartialEq for Position<T, P> {
+impl<T: Token, P: Partitioner<TokenType = T> + Clone> PartialEq for Position<T, P> {
     fn eq(&self, other: &Self) -> bool {
         self.token == other.token
     }
 }
 
-impl<T: Token, P: Partitioner<TokenType = T>> Eq for Position<T, P> {}
+impl<T: Token, P: Partitioner<TokenType = T> + Clone> Eq for Position<T, P> {}
 
-impl<T: Token, P: Partitioner<TokenType = T>> PartialOrd for Position<T, P> {
+impl<T: Token, P: Partitioner<TokenType = T> + Clone> PartialOrd for Position<T, P> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<T: Token, P: Partitioner<TokenType = T>> Ord for Position<T, P> {
+impl<T: Token, P: Partitioner<TokenType = T> + Clone> Ord for Position<T, P> {
     fn cmp(&self, other: &Self) -> Ordering {
         self.token.cmp(&other.token)
     }
 }
 
-impl<T: Token, P: Partitioner<TokenType = T>> Debug for Position<T, P> {
+impl<T: Token, P: Partitioner<TokenType = T> + Clone> Debug for Position<T, P> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Position")
             .field("token", &self.token)
@@ -89,7 +89,7 @@ pub trait RingPosition: Clone + Ord + Send + Sync + Debug + 'static {
     fn max_value(&self) -> Self;
 }
 
-impl<T: Token, P: Partitioner<TokenType = T>> RingPosition for Position<T, P> {
+impl<T: Token + 'static, P: Partitioner<TokenType = T> + Clone> RingPosition for Position<T, P> {
     type TokenType = T;
     type PartitionerType = P;
 

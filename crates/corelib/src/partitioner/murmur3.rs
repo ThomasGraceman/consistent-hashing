@@ -20,7 +20,7 @@ impl Partitioner for Murmur3Partitioner {
     }
 
     fn max_token(&self) -> Self::TokenType {
-        Murmur3Token::max()
+        <Murmur3Token as Token>::max()
     }
 
     fn name(&self) -> &'static str {

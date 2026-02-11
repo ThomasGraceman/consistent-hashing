@@ -20,7 +20,7 @@ impl Partitioner for ByteOrderedPartitioner {
     }
 
     fn max_token(&self) -> Self::TokenType {
-        ByteOrderedToken::max()
+        <ByteOrderedToken as Token>::max()
     }
 
     fn name(&self) -> &'static str {

@@ -1,7 +1,7 @@
 //! Random token implementation for consistent hashing.
 
 use crate::token::traits::Token;
-use std::hash::{Hash, Hasher};
+use std::hash::Hash;
 
 /// Random token using u64 representation.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]

@@ -24,7 +24,7 @@ impl Partitioner for RandomPartitioner {
     }
 
     fn max_token(&self) -> Self::TokenType {
-        RandomToken::max()
+        <RandomToken as Token>::max()
     }
 
     fn name(&self) -> &'static str {

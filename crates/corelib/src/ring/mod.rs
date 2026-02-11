@@ -7,6 +7,9 @@ pub mod ring;
 pub mod position;
 pub mod topology;
 
-pub use ring::HashRing;
 pub use position::RingPosition;
+pub use ring::{HashRing, RingBuilder};
 pub use topology::RingTopology;
+
+/// Alias for the main ring type (used by lib.rs).
+pub type Ring = HashRing;

@@ -4,8 +4,14 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+# Data structures & concurrency
 dashmap = "5.5"
 crossbeam = "0.8"
 parking_lot = "0.12"
+# Hashing
 xxhash-rust = { version = "0.8", features = ["xxh3"] }
 siphasher = "1.0"
+# Serialization (required by token::Token trait: Serialize, Deserialize)
+serde = { version = "1.0", features = ["derive"] }
+# Error types (optional; can use core error::Error instead for TokenError)
+thiserror = "1.0"
