@@ -2,7 +2,6 @@
 //! Use this when you need wire/storage formats; ring logic uses the minimal `Token` trait.
 
 use std::fmt::Display;
-use std::hash::Hash;
 
 use serde::{Deserialize, Serialize};
 

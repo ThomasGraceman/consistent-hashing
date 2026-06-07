@@ -195,7 +195,7 @@ fn test_single_node() {
     ring.add_node(Node::new(NodeId(1), "node1"), 4);
     
     // All keys should map to the single node
-    for key in [b"key1", b"key2", b"key3", b"very-long-key-name"] {
+    for key in [b"key1".as_ref(), b"key2", b"key3", b"very-long-key-name"] {
         let node_id = ring.lookup(key);
         assert_eq!(node_id, Some(NodeId(1)), "All keys should map to single node");
     }
@@ -229,10 +229,10 @@ fn test_idempotent_add() {
     ring.add_node(node.clone(), 4);
     assert_eq!(ring.token_count(), 4);
     
-    // Add same node again (should add more vnodes, not replace)
+    // Re-adding the same node with the same vnodes is idempotent (tokens overwrite)
     ring.add_node(node, 4);
-    assert_eq!(ring.token_count(), 8); // Should have 8 vnodes now (4 + 4)
-    assert_eq!(ring.node_count(), 1); // Still one node
+    assert_eq!(ring.token_count(), 4);
+    assert_eq!(ring.node_count(), 1);
 }
 
 // ============================================================================

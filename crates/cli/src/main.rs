@@ -1,7 +1,7 @@
 //! CLI entry point for consistent-hash-rs.
 
-use cli::{CliConfig, Command};
 use clap::Parser;
+use cli::CliConfig;
 
 fn main() -> anyhow::Result<()> {
     let config = CliConfig::parse();

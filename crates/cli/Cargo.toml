@@ -3,6 +3,13 @@ name = "cli"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "consistent-hash"
+path = "src/main.rs"
+
 [dependencies]
+corelib = { path = "../corelib" }
+replication = { path = "../replication" }
 clap = { version = "4.4", features = ["derive"] }
 tokio = { version = "1.35", features = ["full"] }
+anyhow = "1.0"

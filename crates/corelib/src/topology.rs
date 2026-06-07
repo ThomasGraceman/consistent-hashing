@@ -13,7 +13,7 @@
 //! - **Operations**: Understand which keys map to which nodes
 //! - **Rebalancing**: Identify nodes that need rebalancing
 
-use crate::node::{Node, NodeId};
+use crate::node::NodeId;
 use crate::ring::HashRing;
 use crate::token::murmur3::Murmur3Token;
 use std::collections::HashMap;
@@ -70,7 +70,7 @@ impl Topology {
     /// HashMap mapping NodeId to their tokens
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// let topology = Topology::new(ring);
     /// let ownership = topology.ownership();
     /// // ownership[NodeId(1)] = [Token(100), Token(200), ...]
@@ -106,7 +106,7 @@ impl Topology {
     /// HashMap mapping NodeId to ownership percentage (0.0 - 100.0)
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// let percentages = topology.ownership_percentages();
     /// // percentages[NodeId(1)] = 33.33 (if node1 owns 1/3 of tokens)
     /// ```
@@ -131,7 +131,7 @@ impl Topology {
     ///
     /// # Format
     ///
-    /// ```
+    /// ```text
     /// Ring Description:
     ///   Nodes: 3
     ///   Total Tokens: 768
@@ -210,30 +210,12 @@ impl Topology {
     /// Vec of NodeIds (may be shorter if fewer nodes exist)
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// let replicas = topology.replicas_for_key(b"my-key", 3);
     /// // Returns [NodeId(1), NodeId(2), NodeId(3)]
     /// ```
     pub fn replicas_for_key(&self, key: &[u8], replica_count: usize) -> Vec<NodeId> {
-        if replica_count == 0 {
-            return Vec::new();
-        }
-
-        let mut replicas = Vec::with_capacity(replica_count);
-        let mut seen_nodes = std::collections::HashSet::new();
-
-        // Start with the primary node
-        if let Some(primary) = self.ring.lookup(key) {
-            replicas.push(primary);
-            seen_nodes.insert(primary);
-        }
-
-        // For additional replicas, we'd need to implement clockwise iteration
-        // For now, just return the primary (full implementation requires
-        // iterating tokens clockwise, skipping already-seen nodes)
-        // TODO: Implement full replica discovery
-
-        replicas
+        self.ring.replicas_for_key(key, replica_count)
     }
 
     /// Get the ring reference (for operations that need direct access).

@@ -22,7 +22,7 @@ impl fmt::Display for NodeId {
 ///
 /// Keep this struct small and cheap to clone; heavy mutable state (connections,
 /// metrics, etc.) should live elsewhere.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Node {
     pub id: NodeId,
     /// Human‑readable name or hostname.
@@ -47,14 +47,14 @@ impl Node {
     pub fn with_topology(
         id: NodeId,
         name: impl Into<String>,
-        datacenter: impl Into<Option<String>>,
-        rack: impl Into<Option<String>>,
+        datacenter: impl Into<String>,
+        rack: impl Into<String>,
     ) -> Self {
         Self {
             id,
             name: name.into(),
-            datacenter: datacenter.into(),
-            rack: rack.into(),
+            datacenter: Some(datacenter.into()),
+            rack: Some(rack.into()),
         }
     }
 }

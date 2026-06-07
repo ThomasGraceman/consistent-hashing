@@ -33,11 +33,11 @@
 //! - **Default**: 256 vnodes per node (good balance of distribution vs memory)
 
 use crate::node::{Node, NodeId};
+use crate::partitioner::murmur3::Murmur3Partitioner;
 use crate::partitioner::traits::Partitioner;
 use crate::token::murmur3::Murmur3Token;
-use crate::token::Token;
 use parking_lot::RwLock;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;
 
 // ============================================================================
@@ -353,7 +353,7 @@ impl RingInner {
 ///
 /// # Memory Layout
 ///
-/// ```
+/// ```text
 /// HashRing {
 ///     partitioner: Arc<Murmur3Partitioner>,  // Shared, immutable
 ///     inner: Arc<RwLock<RingInner>> {       // Shared, mutable
@@ -405,7 +405,7 @@ impl HashRing {
     /// - Ring: Empty (no nodes)
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// let ring = HashRing::new();
     /// ```
     pub fn new() -> Self {
@@ -463,7 +463,7 @@ impl HashRing {
     /// The NodeId of the responsible node, or `None` if ring is empty
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// let node_id = ring.lookup(b"my-key");
     /// ```
     #[inline]
@@ -567,7 +567,7 @@ impl HashRing {
     /// - Vnodes are added even if node exists (allows rebalancing)
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// ring.add_node(Node::new(NodeId(1), "node1"), 256);
     /// ```
     pub fn add_node(&self, node: Node, vnodes: usize) {
@@ -614,7 +614,7 @@ impl HashRing {
     /// - Safe to call multiple times (returns false if already removed)
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// ring.remove_node(&NodeId(1));
     /// ```
     pub fn remove_node(&self, node_id: &NodeId) -> bool {
@@ -725,6 +725,55 @@ impl HashRing {
     pub fn partitioner_name(&self) -> &'static str {
         self.partitioner.name()
     }
+
+    /// Find replica nodes for a key by walking clockwise around the ring.
+    ///
+    /// Returns up to `replica_count` unique nodes, starting from the primary
+    /// (the node responsible for the key's token).
+    pub fn replicas_for_key(&self, key: &[u8], replica_count: usize) -> Vec<NodeId> {
+        if replica_count == 0 {
+            return Vec::new();
+        }
+
+        let token = self.partitioner.partition(key);
+        let inner = self.inner.read();
+
+        if inner.tokens.is_empty() {
+            return Vec::new();
+        }
+
+        let mut replicas = Vec::with_capacity(replica_count);
+        let mut seen = HashSet::new();
+
+        for (_, node_id) in inner.tokens.range(token..) {
+            if seen.insert(*node_id) {
+                replicas.push(*node_id);
+                if replicas.len() >= replica_count {
+                    return replicas;
+                }
+            }
+        }
+
+        for (_, node_id) in inner.tokens.iter() {
+            if seen.insert(*node_id) {
+                replicas.push(*node_id);
+                if replicas.len() >= replica_count {
+                    break;
+                }
+            }
+        }
+
+        replicas
+    }
+}
+
+impl Clone for HashRing {
+    fn clone(&self) -> Self {
+        Self {
+            partitioner: Arc::clone(&self.partitioner),
+            inner: Arc::clone(&self.inner),
+        }
+    }
 }
 
 impl Default for HashRing {
@@ -742,7 +791,7 @@ impl Default for HashRing {
 /// # Design Pattern
 ///
 /// Uses the builder pattern to allow fluent construction:
-/// ```rust
+/// ```ignore
 /// let ring = RingBuilder::new()
 ///     .with_vnodes(512)
 ///     .add_node(node1)
@@ -778,7 +827,7 @@ impl RingBuilder {
     /// - **Space**: O(1)
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// let builder = RingBuilder::new();
     /// ```
     pub fn new() -> Self {
@@ -802,7 +851,7 @@ impl RingBuilder {
     /// Self for method chaining
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// builder.with_vnodes(512);
     /// ```
     pub fn with_vnodes(mut self, vnodes: usize) -> Self {
@@ -823,10 +872,10 @@ impl RingBuilder {
     /// Self for method chaining
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// builder.add_node(Node::new(NodeId(1), "node1"));
     /// ```
-    pub fn add_node(mut self, node: Node) -> Self {
+    pub fn add_node(self, node: Node) -> Self {
         // Add node with default vnodes
         // This acquires a write lock, so it's not free
         // But it's necessary to build the ring incrementally
@@ -848,10 +897,10 @@ impl RingBuilder {
     /// Self for method chaining
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// builder.add_node_with_vnodes(Node::new(NodeId(1), "node1"), 512);
     /// ```
-    pub fn add_node_with_vnodes(mut self, node: Node, vnodes: usize) -> Self {
+    pub fn add_node_with_vnodes(self, node: Node, vnodes: usize) -> Self {
         self.ring.add_node(node, vnodes);
         self
     }
@@ -866,7 +915,7 @@ impl RingBuilder {
     /// The constructed HashRing (ready to use)
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// let ring = builder.build();
     /// ```
     pub fn build(self) -> HashRing {

@@ -41,7 +41,7 @@ use crate::token::Token;
 ///
 /// # Memory Layout
 ///
-/// ```
+/// ```text
 /// VirtualNode {
 ///     token: Murmur3Token(u64),  // 8 bytes
 ///     node_id: NodeId(u128),     // 16 bytes
@@ -89,7 +89,7 @@ impl VirtualNode {
     /// - **Space**: O(1) - 24 bytes
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// let vnode = VirtualNode::new(
     ///     Murmur3Token::from_key("node1:0"),
     ///     NodeId(1)
@@ -125,7 +125,7 @@ impl VirtualNode {
     /// A new VirtualNode with a token derived from node_id and index
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// // Create vnode #0 for node 1
     /// let vnode0 = VirtualNode::from_index(NodeId(1), 0);
     ///
@@ -184,7 +184,7 @@ impl VirtualNode {
     /// Distance as a token (can be converted to numeric value)
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// let vnode1 = VirtualNode::from_index(NodeId(1), 0);
     /// let vnode2 = VirtualNode::from_index(NodeId(2), 0);
     /// let distance = vnode1.distance_to(&vnode2);

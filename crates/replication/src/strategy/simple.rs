@@ -37,7 +37,7 @@ use corelib::ring::HashRing;
 ///
 /// # Example
 ///
-/// ```rust
+/// ```ignore
 /// use replication::SimpleStrategy;
 /// use corelib::ring::HashRing;
 ///
@@ -68,7 +68,7 @@ impl SimpleStrategy {
     /// - **Space**: O(1)
     ///
     /// # Example
-    /// ```rust
+    /// ```ignore
     /// let strategy = SimpleStrategy::new(3);
     /// ```
     pub fn new(replication_factor: usize) -> Self {
@@ -92,60 +92,7 @@ impl ReplicationStrategy for SimpleStrategy {
     }
 
     fn replicas_for_key(&self, ring: &HashRing, key: &[u8]) -> Vec<NodeId> {
-        if self.replication_factor == 0 {
-            return Vec::new();
-        }
-
-        // Find the primary node (first replica)
-        let primary = match ring.lookup(key) {
-            Some(node_id) => node_id,
-            None => return Vec::new(), // Empty ring
-        };
-
-        // Get all tokens sorted by position
-        let mut tokens = ring.tokens();
-        if tokens.is_empty() {
-            return Vec::new();
-        }
-
-        // Sort tokens by position
-        tokens.sort_by_key(|(token, _)| *token);
-
-        // Find the starting position (first token that maps to primary node)
-        // We need to find where the primary node's tokens start
-        let start_idx = tokens
-            .iter()
-            .position(|(_, node_id)| *node_id == primary)
-            .unwrap_or(0);
-
-        // Collect replicas (wrapping around if needed)
-        let mut replicas = Vec::with_capacity(self.replication_factor);
-        let mut seen_nodes = std::collections::HashSet::new();
-
-        // Add primary first
-        replicas.push(primary);
-        seen_nodes.insert(primary);
-
-        // Continue clockwise to find more replicas
-        for i in 1..tokens.len() {
-            let idx = (start_idx + i) % tokens.len();
-            let (_, node_id) = tokens[idx];
-
-            // Skip if we've already seen this node
-            if seen_nodes.contains(&node_id) {
-                continue;
-            }
-
-            replicas.push(node_id);
-            seen_nodes.insert(node_id);
-
-            // Stop when we have enough replicas
-            if replicas.len() >= self.replication_factor {
-                break;
-            }
-        }
-
-        replicas
+        ring.replicas_for_key(key, self.replication_factor)
     }
 
     fn name(&self) -> &'static str {
